@@ -1,0 +1,59 @@
+version: '3'
+services:
+  mult-server-config:
+    build: 
+      dockerfile: Dockerfile
+      context: ./mult-server-config
+    image: -
+    container_name: mult-server-config
+    ports:
+      - 8888:8888
+    networks:
+      - microsservices-network
+  mult-server-proxy:
+    build:
+      dockerfile: Dockerfile
+      context: ./mult-server-proxy
+    image: -
+    container_name: mult-server-proxy
+    ports:
+      - 8762:8762
+    networks:
+      - microsservices-network
+    depends_on:
+      - mult-server-config
+  mult-server-service-discovery:
+      build:
+        dockerfile: Dockerfile
+        context: ./mult-server-service-discovery
+      image: -
+      container_name: mult-server-service-discovery
+      ports:
+        - 8761:8761
+      networks:
+        - microsservices-network
+      depends_on:
+        - mult-server-proxy
+  mult-server-zipkin:
+      image: openzipkin/zipkin
+      container_name: mult-server-zipkin
+      ports:
+        - 9411:9411
+      networks:
+        - microsservices-network
+  mult-app-product:
+    build:
+      dockerfile: Dockerfile
+      context: ./mult-app-product
+    image: whaomibr/ms-catalog-product:1.0
+    container_name: mult-app-product
+    ports:
+      - 8081:8080
+    networks:
+      - microsservices-network
+    depends_on:
+      - mult-server-config
+      - mult-server-service-discovery
+networks: 
+  microsservices-network:
+    driver: bridge
